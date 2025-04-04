@@ -74,7 +74,7 @@ feeltrip/
 
 ## 🤝 Acknowledgements
 
-- [GoEmotions Dataset by Google Research](https://github.com/google-research/goemotions)  
+- [GoEmotions Dataset by Google Research]([https://github.com/google-research/goemotions](https://www.kaggle.com/datasets/debarshichanda/goemotions/data)
 - [Yelp Open Dataset](https://www.yelp.com/dataset)  
 - [HuggingFace Transformers](https://huggingface.co/transformers/)  
 
