@@ -54,3 +54,7 @@ print(f"Combined dataset size: {len(combined)}")
 print(combined[0])
 print(goemotions.column_names)
 
+# Save the combined dataset
+combined.save_to_disk("combined_emotion_dataset")
+
+
