@@ -1,16 +1,23 @@
 import streamlit as st
 from transformers import DistilBertTokenizerFast, DistilBertForSequenceClassification
 import torch
+import os  
 
 st.set_page_config(page_title="FeelTrip", page_icon="🌍")
 
-# Load model and tokenizer
+
+
+
+
 @st.cache_resource
 def load_model():
-    model_path = "../emotion_model/distilbert-emotion"
+    model_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../emotion_model/distilbert-emotion"))
     tokenizer = DistilBertTokenizerFast.from_pretrained(model_path)
     model = DistilBertForSequenceClassification.from_pretrained(model_path)
     return tokenizer, model
+
+
+
 
 tokenizer, model = load_model()
 
