@@ -1,0 +1,5 @@
+.DS_Store
+emotion_model/.DS_Store
+*.arrow
+emotion_model/combined_emotion_dataset/
+__pycache__/
