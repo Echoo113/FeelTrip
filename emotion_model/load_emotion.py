@@ -1,6 +1,7 @@
 from datasets import load_dataset
 dataset = load_dataset("dair-ai/emotion")
 print(dataset['train'][0])
+
 #print entire dataset
 for i in range(len(dataset['train'])):
     print(dataset['train'][i])
