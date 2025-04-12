@@ -1,7 +1,9 @@
-# personality_form.py
-
 import streamlit as st
+import numpy as np
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
 
+# 📋 问卷收集函数
 def collect_personality():
     st.markdown("## 🧠 Personality Questionnaire")
     st.markdown("Please rate how much you agree with the following statements (1 = Strongly Disagree, 5 = Strongly Agree):")
@@ -30,3 +32,24 @@ def collect_personality():
         responses.append(val)
 
     return responses
+
+
+# 🧠 个性降维+聚类模型
+class PersonalityModel:
+    def __init__(self, n_components=3, n_clusters=4):
+        self.pca = PCA(n_components=n_components)
+        self.kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+        self.fitted = False
+
+    def fit(self, all_user_vectors):
+        # 输入维度：(n_samples, 15)
+        self.pca.fit(all_user_vectors)
+        pca_output = self.pca.transform(all_user_vectors)
+        self.kmeans.fit(pca_output)
+        self.fitted = True
+
+    def encode(self, user_vector):
+        vec = np.array([user_vector])
+        pca_vec = self.pca.transform(vec)
+        cluster = self.kmeans.predict(pca_vec)
+        return pca_vec.flatten().tolist(), int(cluster[0])
