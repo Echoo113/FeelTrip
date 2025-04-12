@@ -135,9 +135,21 @@ elif page == "Personality Test":
             success = save_user_response(user_vector)
 
             if success:
-                st.success("✅ Response saved successfully!")
-                real_data = load_all_responses()
-                st.write("📊 Total responses loaded:", real_data.shape[0])
+                
+                
+
+                try:
+                    df_check = pd.read_csv("user_responses.csv")
+                    st.info(f"📝 user_responses.csv 当前共 {df_check.shape[0]} 条记录")
+                    real_data = df_check[df_check["q1"] != "q1"].dropna().astype(int).values
+                except Exception as e:
+                    st.warning(f"⚠️ Could not load user_responses.csv: {e}")
+                    real_data = np.random.randint(1, 6, (50, 15))  # fallback for safety
+
+                st.write("📊 Total responses loaded:", real_data.shape[0])  # ✅ 这时候 real_data 已经有了
+
+
+
 
                 # 训练个性模型
                 n_clusters = min(4, real_data.shape[0])
