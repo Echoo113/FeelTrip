@@ -99,52 +99,60 @@ elif page == "Personality Test":
 
     user_vector = collect_personality()
 
-    # 保存响应
+    # 保存问卷响应
     def save_user_response(user_vector):
-        file_path = "user_responses.csv"
-        columns = [f"q{i+1}" for i in range(15)]
-        new_entry = pd.DataFrame([user_vector], columns=columns)
-
         try:
+            file_path = "user_responses.csv"
+            columns = [f"q{i+1}" for i in range(15)]
+            new_entry = pd.DataFrame([user_vector], columns=columns)
+
             if os.path.exists(file_path):
                 df = pd.read_csv(file_path)
                 df = pd.concat([df, new_entry], ignore_index=True)
             else:
                 df = new_entry
+
             df.to_csv(file_path, index=False)
             return True
         except Exception as e:
             st.error(f"❌ Failed to save response: {e}")
             return False
 
-    # 点击按钮时执行
+    # 加载问卷数据
+    def load_all_responses():
+        try:
+            df = pd.read_csv("user_responses.csv")
+            df = df[df["q1"] != "q1"]  # 去掉重复表头
+            df = df.dropna()
+            return df.astype(int).values
+        except Exception as e:
+            st.warning(f"⚠️ Could not load user data, using fallback: {e}")
+            return np.random.randint(1, 6, (50, 15))
+
+    # 📩 点击按钮后执行
     if st.button("📊 Submit Personality Info"):
-        st.info("⏳ Submitting your response...")
+        with st.spinner("Saving your response and updating model..."):
+            success = save_user_response(user_vector)
 
-        # Step 1: 保存问卷
-        if save_user_response(user_vector):
-            st.success("✅ Your response has been saved!")
+            if success:
+                st.success("✅ Response saved successfully!")
+                real_data = load_all_responses()
+                st.write("📊 Total responses loaded:", real_data.shape[0])
 
-            # Step 2: 加载数据
-            try:
-                df = pd.read_csv("user_responses.csv")
-                df = df[df["q1"] != "q1"]
-                df = df.dropna()
-                real_data = df.astype(int).values
-                st.write("🧪 Loaded response shape:", real_data.shape)
-            except Exception as e:
-                st.warning(f"❗ Failed to load data: {e}")
-                real_data = np.random.randint(1, 6, (50, 15))
+                # 训练个性模型
+                n_clusters = min(4, real_data.shape[0])
+                if real_data.shape[0] < 3:
+                    st.warning("Not enough responses for PCA training. Need ≥ 3.")
+                    st.stop()
 
-            # Step 3: 模型训练
-            n_clusters = min(4, real_data.shape[0])
-            personality_model = PersonalityModel(n_components=3, n_clusters=n_clusters)
-            personality_model.fit(real_data)
+                personality_model = PersonalityModel(n_components=3, n_clusters=n_clusters)
+                personality_model.fit(real_data)
 
-            # Step 4: 编码当前用户
-            pca_vec, cluster = personality_model.encode(user_vector)
+                # 当前用户向量
+                pca_vec, cluster = personality_model.encode(user_vector)
 
-            # Step 5: 显示
-            st.markdown("### Encoded Personality Vector:")
-            st.write(pca_vec)
-            st.markdown(f"### Cluster Assignment: 🎯 Cluster #{cluster}")
+                st.markdown("### Encoded Personality Vector:")
+                st.write(pca_vec)
+                st.markdown(f"### Cluster Assignment: 🎯 Cluster #{cluster}")
+            else:
+                st.error("Saving failed. Please try again.")
