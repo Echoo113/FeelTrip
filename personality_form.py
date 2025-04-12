@@ -3,7 +3,7 @@
 import streamlit as st
 
 def collect_personality():
-    st.markdown("##  Personality Questionnaire")
+    st.markdown("## 🧠 Personality Questionnaire")
     st.markdown("Please rate how much you agree with the following statements (1 = Strongly Disagree, 5 = Strongly Agree):")
 
     questions = [

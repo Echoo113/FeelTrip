@@ -10,7 +10,7 @@ st.set_page_config(page_title="FeelTrip", page_icon="🌍")
 # 模型加载（缓存）
 @st.cache_resource
 def load_model():
-    model_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../emotion_model/distilbert-emotion"))
+    model_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "emotion_model/distilbert-emotion"))
     tokenizer = DistilBertTokenizerFast.from_pretrained(model_path)
     model = DistilBertForSequenceClassification.from_pretrained(model_path)
     return tokenizer, model
