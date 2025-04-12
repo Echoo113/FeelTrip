@@ -51,4 +51,8 @@ print(goemotions.column_names)
 # Save the combined dataset
 combined.save_to_disk("combined_emotion_dataset")
 
-
+#print the sample counts
+print("Sample counts:")
+print("GoEmotions:", len(goemotions))
+print("Emotion:", len(emotion_ds))
+print("Combined:", len(combined))
