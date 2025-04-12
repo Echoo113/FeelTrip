@@ -84,33 +84,52 @@ if page == "Emotion Analysis":
 # --------------------------
 # Personality Test 
 elif page == "Personality Test":
+    
+
     st.markdown("<h1 style='text-align: center;'>🧠 Personality Questionnaire</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>Rate how well each statement describes you (1 = Strongly Disagree, 5 = Strongly Agree)</p>", unsafe_allow_html=True)
 
-    #answer = st.radio("Do you want to take the personality test?", ("Yes", "No"))
-    user_vector = collect_personality()
+    user_vector = collect_personality()  # slider 输入
 
+    # 保存问卷响应的函数
+    def save_user_response(user_vector):
+        file_path = "user_responses.csv"
+        columns = [f"q{i+1}" for i in range(15)]
+        new_entry = pd.DataFrame([user_vector], columns=columns)
 
-    
+        if os.path.exists(file_path):
+            df = pd.read_csv(file_path)
+            df = pd.concat([df, new_entry], ignore_index=True)
+        else:
+            df = new_entry
 
+        df.to_csv(file_path, index=False)
+
+    # 提交按钮处理逻辑
     if st.button("📊 Submit Personality Info"):
-        # 生成 personality_vector 和 cluster
-        pca_vec, cluster = model.encode(user_vector)
-
+        # Step 1: 保存当前用户响应
         save_user_response(user_vector)
+
+        # Step 2: 读取所有历史数据
         file_path = "user_responses.csv"
         if os.path.exists(file_path):
             real_data = pd.read_csv(file_path).values
         else:
-            real_data = np.random.randint(1, 6, (50, 15))  
-        model=PersonalityModel()
-        model.fit(real_data)
-        pca_vec, cluster = model.encode(user_vector)
+            real_data = np.random.randint(1, 6, (50, 15))  # fallback
 
+        # Step 3: 训练 PCA + 聚类模型
+        personality_model = PersonalityModel()
+        personality_model.fit(real_data)
+
+        # Step 4: 对当前用户生成向量 + cluster
+        pca_vec, cluster = personality_model.encode(user_vector)
+
+        # Step 5: 显示结果
         st.success("✅ Your personality vector has been recorded.")
         st.markdown("### Encoded Personality Vector:")
         st.write(pca_vec)
         st.markdown(f"### Cluster Assignment: 🎯 Cluster #{cluster}")
+
 
 
 def save_user_response(user_vector):
