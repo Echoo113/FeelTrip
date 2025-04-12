@@ -8,7 +8,18 @@ from personality import collect_personality, PersonalityModel
 
 # Streamlit 页面设置
 st.set_page_config(page_title="FeelTrip", page_icon="🌍")
+def save_user_response(user_vector):
+    file_path = "user_responses.csv"
+    columns = [f"q{i+1}" for i in range(15)]
+    new_entry = pd.DataFrame([user_vector], columns=columns)
 
+    if os.path.exists(file_path):
+        df = pd.read_csv(file_path)
+        df = pd.concat([df, new_entry], ignore_index=True)
+    else:
+        df = new_entry
+
+    df.to_csv(file_path, index=False)
 # 模型加载（缓存）
 @st.cache_resource
 def load_model():
@@ -82,65 +93,58 @@ if page == "Emotion Analysis":
                 st.success("✨ Sounds like you're feeling alright — let’s find a travel spot that fits this vibe!")
 
 # --------------------------
-# Personality Test 
 elif page == "Personality Test":
-    
-
     st.markdown("<h1 style='text-align: center;'>🧠 Personality Questionnaire</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>Rate how well each statement describes you (1 = Strongly Disagree, 5 = Strongly Agree)</p>", unsafe_allow_html=True)
 
-    user_vector = collect_personality()  # slider 输入
+    user_vector = collect_personality()
 
-    # 保存问卷响应的函数
+    # 保存响应
     def save_user_response(user_vector):
         file_path = "user_responses.csv"
         columns = [f"q{i+1}" for i in range(15)]
         new_entry = pd.DataFrame([user_vector], columns=columns)
 
-        if os.path.exists(file_path):
-            df = pd.read_csv(file_path)
-            df = pd.concat([df, new_entry], ignore_index=True)
-        else:
-            df = new_entry
+        try:
+            if os.path.exists(file_path):
+                df = pd.read_csv(file_path)
+                df = pd.concat([df, new_entry], ignore_index=True)
+            else:
+                df = new_entry
+            df.to_csv(file_path, index=False)
+            return True
+        except Exception as e:
+            st.error(f"❌ Failed to save response: {e}")
+            return False
 
-        df.to_csv(file_path, index=False)
-
-    # 提交按钮处理逻辑
+    # 点击按钮时执行
     if st.button("📊 Submit Personality Info"):
-        # Step 1: 保存当前用户响应
-        save_user_response(user_vector)
+        st.info("⏳ Submitting your response...")
 
-        # Step 2: 读取所有历史数据
-        file_path = "user_responses.csv"
-        if os.path.exists(file_path):
-            real_data = pd.read_csv(file_path).values
-        else:
-            real_data = np.random.randint(1, 6, (50, 15))  # fallback
+        # Step 1: 保存问卷
+        if save_user_response(user_vector):
+            st.success("✅ Your response has been saved!")
 
-        # Step 3: 训练 PCA + 聚类模型
-        personality_model = PersonalityModel()
-        personality_model.fit(real_data)
+            # Step 2: 加载数据
+            try:
+                df = pd.read_csv("user_responses.csv")
+                df = df[df["q1"] != "q1"]
+                df = df.dropna()
+                real_data = df.astype(int).values
+                st.write("🧪 Loaded response shape:", real_data.shape)
+            except Exception as e:
+                st.warning(f"❗ Failed to load data: {e}")
+                real_data = np.random.randint(1, 6, (50, 15))
 
-        # Step 4: 对当前用户生成向量 + cluster
-        pca_vec, cluster = personality_model.encode(user_vector)
+            # Step 3: 模型训练
+            n_clusters = min(4, real_data.shape[0])
+            personality_model = PersonalityModel(n_components=3, n_clusters=n_clusters)
+            personality_model.fit(real_data)
 
-        # Step 5: 显示结果
-        st.success("✅ Your personality vector has been recorded.")
-        st.markdown("### Encoded Personality Vector:")
-        st.write(pca_vec)
-        st.markdown(f"### Cluster Assignment: 🎯 Cluster #{cluster}")
+            # Step 4: 编码当前用户
+            pca_vec, cluster = personality_model.encode(user_vector)
 
-
-
-def save_user_response(user_vector):
-    file_path = "user_responses.csv"
-    columns = [f"q{i+1}" for i in range(15)]
-    new_entry = pd.DataFrame([user_vector], columns=columns)
-
-    if os.path.exists(file_path):
-        df = pd.read_csv(file_path)
-        df = pd.concat([df, new_entry], ignore_index=True)
-    else:
-        df = new_entry
-
-    df.to_csv(file_path, index=False)
+            # Step 5: 显示
+            st.markdown("### Encoded Personality Vector:")
+            st.write(pca_vec)
+            st.markdown(f"### Cluster Assignment: 🎯 Cluster #{cluster}")
