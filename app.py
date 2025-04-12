@@ -84,12 +84,14 @@ if page == "Emotion Analysis":
 # --------------------------
 # Personality Test 
 elif page == "Personality Test":
+    
+
     st.markdown("<h1 style='text-align: center;'>🧠 Personality Questionnaire</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>Rate how well each statement describes you (1 = Strongly Disagree, 5 = Strongly Agree)</p>", unsafe_allow_html=True)
 
-    user_vector = collect_personality()
+    user_vector = collect_personality()  # slider 输入
 
-    # 保存函数（可放顶部）
+    # 保存问卷响应的函数
     def save_user_response(user_vector):
         file_path = "user_responses.csv"
         columns = [f"q{i+1}" for i in range(15)]
@@ -103,29 +105,23 @@ elif page == "Personality Test":
 
         df.to_csv(file_path, index=False)
 
-    # 👇👇👇 这一段是按钮被点击时的完整逻辑 👇👇👇
+    # 提交按钮处理逻辑
     if st.button("📊 Submit Personality Info"):
-
-        # Step 1: 保存当前用户响应（必须放最前面）
+        # Step 1: 保存当前用户响应
         save_user_response(user_vector)
 
-        # Step 2: 加载所有数据
-        try:
-            df = pd.read_csv("user_responses.csv")
-            df = df[df["q1"] != "q1"]  # 移除重复表头
-            df = df.dropna()
-            real_data = df.astype(int).values
-            st.write("🧪 Loaded response shape:", real_data.shape)  # debug
-        except Exception as e:
-            st.warning(f"❗ Failed to load user data: {e}")
-            real_data = np.random.randint(1, 6, (50, 15))
+        # Step 2: 读取所有历史数据
+        file_path = "user_responses.csv"
+        if os.path.exists(file_path):
+            real_data = pd.read_csv(file_path).values
+        else:
+            real_data = np.random.randint(1, 6, (50, 15))  # fallback
 
-        # Step 3: 训练个性模型
-        n_clusters = min(4, real_data.shape[0])
-        personality_model = PersonalityModel(n_components=3, n_clusters=n_clusters)
+        # Step 3: 训练 PCA + 聚类模型
+        personality_model = PersonalityModel()
         personality_model.fit(real_data)
 
-        # Step 4: 当前用户向量生成
+        # Step 4: 对当前用户生成向量 + cluster
         pca_vec, cluster = personality_model.encode(user_vector)
 
         # Step 5: 显示结果
