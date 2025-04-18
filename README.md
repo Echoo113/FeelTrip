@@ -2,19 +2,26 @@
 
 ## Project Overview
 
-**FeelTrip** is a solo-developed project at the intersection of **statistical modeling**, **machine learning**, and **algorithm design**. It serves as a functional prototype of an emotion- and personality-aware travel recommendation system, with no reliance on interdisciplinary psychology. The emphasis is on mathematical modeling, data processing, and algorithmic implementation.
+**FeelTrip** is a solo-developed project at the intersection of **statistical modeling**, **machine learning**, and **algorithm design**, enhanced by modern **large language models (LLMs)**. It serves as a functional prototype of an emotion- and personality-aware travel recommendation system, focusing purely on computational approaches without reliance on interdisciplinary psychology. The system utilizes the **OpenAI API** to perform emotion classification using pre-trained transformer models.
 
 ---
 
 ## Objectives
 
-- Extract user emotion via natural language processing (NLP).
-- Map personality through questionnaire encoding and clustering.
-- Classify tourism destinations using multi-label supervised learning.
-- Match users to destinations via similarity-based recommendation.
-- Construct personalized travel routes through combinatorial optimization.
+- **Extract user emotion** via natural language processing (NLP) using LLMs (e.g., DistilBERT via OpenAI API).
+- **Map user personality** through questionnaire encoding and unsupervised clustering (e.g., PCA + KMeans).
+- **Classify tourism destinations** with multi-label supervised learning using scikit-learn models.
+- **Recommend personalized destinations** through vector similarity and content-based filtering.
+- **Generate travel routes** using combinatorial optimization techniques (e.g., TSP heuristics).
 
 ---
+
+## Highlights
+
+- Emotion classification is powered by OpenAI’s LLMs, accessed via the **OpenAI API**.
+- All modeling is done in **Python**, using **PyTorch**, **scikit-learn**, and **pandas**.
+- Real-time user interaction is implemented using **Streamlit**, deployed on the cloud.
+- Emphasizes **mathematical modeling** and **computational techniques**, making it suitable for CS/stats research portfolios.
 
 ## System Architecture
 
