@@ -1,25 +1,68 @@
 import streamlit as st
+# Streamlit 页面设置
+st.set_page_config(page_title="FeelTrip", page_icon="🌍")
+
+
 from transformers import DistilBertTokenizerFast, DistilBertForSequenceClassification
 import torch
 import pandas as pd
 import numpy as np
 import os
 from personality import collect_personality, PersonalityModel
+import emoai
 
-# Streamlit 页面设置
-st.set_page_config(page_title="FeelTrip", page_icon="🌍")
+
+if "chat_enabled" not in st.session_state:
+    st.session_state.chat_enabled = False
+
+if "emo_history" not in st.session_state:
+    st.session_state.emo_history = [] 
+
+
+
+
+
 def save_user_response(user_vector):
+    try:
+        file_path = "user_responses.csv"
+        columns = [f"q{i+1}" for i in range(15)]
+        new_entry = pd.DataFrame([user_vector], columns=columns)
+
+        if os.path.exists(file_path):
+            df = pd.read_csv(file_path)
+            # ⚠️ 防止 header 被追加：删除重复表头行
+            df = df[df["q1"] != "q1"]
+            df = pd.concat([df, new_entry], ignore_index=True)
+        else:
+            df = new_entry
+
+        df.to_csv(file_path, index=False)
+        st.success(f"✅ Response saved. File now has {df.shape[0]} records.")
+        return True
+    except Exception as e:
+        st.error(f"❌ Failed to save response: {e}")
+        return False
+
     file_path = "user_responses.csv"
     columns = [f"q{i+1}" for i in range(15)]
     new_entry = pd.DataFrame([user_vector], columns=columns)
 
-    if os.path.exists(file_path):
-        df = pd.read_csv(file_path)
-        df = pd.concat([df, new_entry], ignore_index=True)
-    else:
-        df = new_entry
+        if os.path.exists(file_path):
+            df = pd.read_csv(file_path)
+            # ⚠️ 防止 header 被追加：删除重复表头行
+            df = df[df["q1"] != "q1"]
+            df = pd.concat([df, new_entry], ignore_index=True)
+        else:
+            df = new_entry
 
-    df.to_csv(file_path, index=False)
+        df.to_csv(file_path, index=False)
+        st.success(f"✅ Response saved. File now has {df.shape[0]} records.")
+        return True
+    except Exception as e:
+        st.error(f"❌ Failed to save response: {e}")
+        return False
+
+   
 # 模型加载（缓存）
 @st.cache_resource
 def load_model():
@@ -44,6 +87,8 @@ page = st.sidebar.radio("🧭 Select Mode", ["Emotion Analysis", "Personality Te
 # --------------------------
 # Emotion Analysis 页面
 if page == "Emotion Analysis":
+    
+
     st.markdown("<h1 style='text-align: center;'>🌍 FeelTrip: Emotion-Aware Travel Companion</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>Tell us how you’re feeling, and we’ll reflect your emotion — and comfort you if needed 💛</p>", unsafe_allow_html=True)
 
@@ -91,9 +136,17 @@ if page == "Emotion Analysis":
                 st.info("“Even the darkest night will end and the sun will rise.” – Victor Hugo")
             else:
                 st.success("✨ Sounds like you're feeling alright — let’s find a travel spot that fits this vibe!")
+            st.session_state.chat_enabled = True
+            st.session_state.emo_history = []
+        
+
+            
+if st.session_state.chat_enabled:
+            st.markdown("---")
+            emoai.main()
 
 # --------------------------
-elif page == "Personality Test":
+if page == "Personality Test":
     st.markdown("<h1 style='text-align: center;'>🧠 Personality Questionnaire</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>Rate how well each statement describes you (1 = Strongly Disagree, 5 = Strongly Agree)</p>", unsafe_allow_html=True)
 
@@ -168,3 +221,5 @@ elif page == "Personality Test":
                 st.markdown(f"### Cluster Assignment: 🎯 Cluster #{cluster}")
             else:
                 st.error("Saving failed. Please try again.")
+
+
