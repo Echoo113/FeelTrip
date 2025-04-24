@@ -5,11 +5,11 @@ import openai
 import os
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# —— 初始化聊天历史
+# initialize session state
 if "emo_history" not in st.session_state:
     st.session_state.emo_history = []
 
-# —— 禁止技术/学术关键词
+# initialize chat state
 FORBIDDEN = {"math","code","python","c++","java","solve","calculate","algorithm","essay","write","homework","proof","formula"}
 
 def is_emotion_focused(text: str) -> bool:
@@ -35,22 +35,22 @@ def get_ai_response(user_input: str) -> str:
 def handle_send():
     txt = st.session_state.emo_input.strip()
     if not txt:
-        st.warning('请先输入内容，再点「发送」哦。')
+        st.warning('Please enter something so we can understand your mood 💬')
     elif not is_emotion_focused(txt):
-        st.warning('⚠️ 这里只能写感受哦，请分享情绪。')
+        st.warning('⚠️ Please focus on your feelings. Avoid technical or mathematical questions.')
     else:
         st.session_state.emo_history.append({'who': 'user', 'text': txt})
-        with st.spinner('思考中…'):
+        with st.spinner('Thinking...'):
             reply = get_ai_response(txt)
         st.session_state.emo_history.append({'who': 'ai', 'text': reply})
 
 import streamlit as st
-# （省略前面 openai、state 等逻辑，下面直接贴 main）
+
 
 def main():
    
 
-    # —— 只隐藏 Streamlit 顶部菜单和页脚，不改其他容器
+    #page definition
     st.markdown("""
     <style>
       
@@ -107,13 +107,13 @@ def main():
     </style>
     """, unsafe_allow_html=True)
 
-    # —— 微信窗口外壳
+    
     st.markdown("<div class='chat-wrapper'>", unsafe_allow_html=True)
 
-    # —— 顶部
+
     st.markdown("<div class='chat-header'>💬 Let's chat with AI</div>", unsafe_allow_html=True)
 
-    # —— 滚动消息区
+    #chat history
     st.markdown("<div class='chat-content'>", unsafe_allow_html=True)
     for msg in st.session_state.emo_history:
         cls = 'user' if msg['who']=='user' else 'ai'
@@ -121,7 +121,7 @@ def main():
         st.markdown(f"<div class='message {cls}'>{text}</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # —— 底部输入区
+    # bottom input area
     with st.form(key='chat_form', clear_on_submit=True):
         st.markdown("<div class='input-area'>", unsafe_allow_html=True)
         st.text_input('', key='emo_input', placeholder='Type your feelings…')

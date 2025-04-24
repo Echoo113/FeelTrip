@@ -1,5 +1,5 @@
 import streamlit as st
-# Streamlit 页面设置
+# -*- coding: utf-8 -*-
 st.set_page_config(page_title="FeelTrip", page_icon="🌍")
 
 
@@ -30,7 +30,7 @@ def save_user_response(user_vector):
 
         if os.path.exists(file_path):
             df = pd.read_csv(file_path)
-            # ⚠️ 防止 header 被追加：删除重复表头行
+            # delete the first row if it contains the header
             df = df[df["q1"] != "q1"]
             df = pd.concat([df, new_entry], ignore_index=True)
         else:
@@ -43,27 +43,10 @@ def save_user_response(user_vector):
         st.error(f"❌ Failed to save response: {e}")
         return False
 
-    file_path = "user_responses.csv"
-    columns = [f"q{i+1}" for i in range(15)]
-    new_entry = pd.DataFrame([user_vector], columns=columns)
-
-        if os.path.exists(file_path):
-            df = pd.read_csv(file_path)
-            # ⚠️ 防止 header 被追加：删除重复表头行
-            df = df[df["q1"] != "q1"]
-            df = pd.concat([df, new_entry], ignore_index=True)
-        else:
-            df = new_entry
-
-        df.to_csv(file_path, index=False)
-        st.success(f"✅ Response saved. File now has {df.shape[0]} records.")
-        return True
-    except Exception as e:
-        st.error(f"❌ Failed to save response: {e}")
-        return False
+    
 
    
-# 模型加载（缓存）
+# model loading
 @st.cache_resource
 def load_model():
     model_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "emotion_model/distilbert-emotion"))
@@ -73,7 +56,7 @@ def load_model():
 
 tokenizer, model = load_model()
 
-# 情绪标签
+# mood detection
 EMOTION_LABELS = ["sadness", "joy", "love", "anger", "fear", "surprise"]
 NEGATIVE_EMOTIONS = {
     "sadness", "anger", "fear", "disappointment", "grief",
@@ -81,11 +64,11 @@ NEGATIVE_EMOTIONS = {
 }
 
 # --------------------------
-# Sidebar 页面切换
+# Sidebar panel
 page = st.sidebar.radio("🧭 Select Mode", ["Emotion Analysis", "Personality Test"])
 
 # --------------------------
-# Emotion Analysis 页面
+# Emotion Analysis 
 if page == "Emotion Analysis":
     
 
@@ -152,7 +135,7 @@ if page == "Personality Test":
 
     user_vector = collect_personality()
 
-    # 保存问卷响应
+    # save user response
     def save_user_response(user_vector):
         try:
             file_path = "user_responses.csv"
@@ -182,7 +165,7 @@ if page == "Personality Test":
             st.warning(f"⚠️ Could not load user data, using fallback: {e}")
             return np.random.randint(1, 6, (50, 15))
 
-    # 📩 点击按钮后执行
+    #button to submit personality info
     if st.button("📊 Submit Personality Info"):
         with st.spinner("Saving your response and updating model..."):
             success = save_user_response(user_vector)
@@ -204,7 +187,7 @@ if page == "Personality Test":
 
 
 
-                # 训练个性模型
+                # load all responses
                 n_clusters = min(4, real_data.shape[0])
                 if real_data.shape[0] < 3:
                     st.warning("Not enough responses for PCA training. Need ≥ 3.")
@@ -213,7 +196,7 @@ if page == "Personality Test":
                 personality_model = PersonalityModel(n_components=3, n_clusters=n_clusters)
                 personality_model.fit(real_data)
 
-                # 当前用户向量
+                # culculate PCA
                 pca_vec, cluster = personality_model.encode(user_vector)
 
                 st.markdown("### Encoded Personality Vector:")
