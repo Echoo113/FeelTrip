@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 
-# 📋 问卷收集函数
+# user personality questionnaire
 def collect_personality():
     st.markdown("## 🧠 Personality Questionnaire")
     st.markdown("Please rate how much you agree with the following statements (1 = Strongly Disagree, 5 = Strongly Agree):")
@@ -34,7 +34,7 @@ def collect_personality():
     return responses
 
 
-# 🧠 个性降维+聚类模型
+# personality model
 class PersonalityModel:
     def __init__(self, n_components=3, n_clusters=4):
         self.pca = PCA(n_components=n_components)
